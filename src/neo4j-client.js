@@ -27,6 +27,18 @@ export default class Neo4jClient {
 			throw result.body.errors;
 		}
 
-		return result.body.results[0];
+		return mapResults(result.body.results[0]);
+
+		function mapResults(result) {
+			return result.data.map(rowData => {
+				let rowObject = {};
+
+				result.columns.forEach((columnName, i) => {
+					rowObject[columnName] = rowData.row[i];
+				});
+
+				return rowObject;
+			});
+		}
 	}
 }

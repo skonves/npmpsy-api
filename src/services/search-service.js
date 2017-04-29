@@ -7,7 +7,6 @@ const authorization = `Basic ${process.env.NEO4J_AUTH}`;
 const client = new Neo4jClient(endpoint, authorization);
 
 export function findPackages(q, offset, limit, callback) {
-
 	const statement = `
 		MATCH (p:Package)-[:RELEASED_AS]->(v:Version) WHERE p.id STARTS WITH {q}
 		RETURN DISTINCT p.id AS packageId, collect({name: v.name, ts: v.ts}) AS versions
@@ -15,12 +14,12 @@ export function findPackages(q, offset, limit, callback) {
 
 	client.query(statement, { q, offset, limit })
 		.then(result => {
-			if (result && result.data) {
+			if (result) {
 				callback(null, {
-					packages: result.data.map(d => {
+					packages: result.map(d => {
 						return {
-							id: d.row[0],
-							versions: d.row[1] ? d.row[1].sort((a, b) => b.ts - a.ts) : []
+							id: d.packageId,
+							versions: d.versions ? d.versions.sort((a, b) => b.ts - a.ts) : []
 						};
 					})
 				});
@@ -29,20 +28,28 @@ export function findPackages(q, offset, limit, callback) {
 			}
 		})
 		.catch(ex => callback(ex));
+}
 
-	// const body = {
-	// 	statements: [{
-	// 		statement: `
-	// 		MATCH (p:Package)-[:RELEASED_AS]->(v:Version) WHERE p.id STARTS WITH {q}
-	// 		RETURN DISTINCT p.id AS packageId, collect({name: v.name, ts: v.ts}) AS versions
-	// 		ORDER BY packageId SKIP {offset} LIMIT {limit}`,
-	// 		parameters: { q, offset, limit },
-	// 		'resultDataContents': [
-	// 			'row'
-	// 		],
-	// 		'includeStats': false
-	// 	}]
-	// };
+export function getVersions(packageId, offset, limit, callback) {
+	const statement = `
+		MATCH (n:Package)-[r:RELEASED_AS]->(v:Version) where n.id = {packageId}
+		RETURN v.name AS name, v.ts AS ts
+		ORDER BY ts DESC SKIP {offset} LIMIT {limit}`;
+
+	client.query(statement, { packageId, offset, limit })
+		.then(result => {
+			if (result) {
+				callback(null, {
+					packageId,
+					versions: result.map(d => {
+						return { version: d.name, ts: d.ts };
+					})
+				});
+			} else {
+				callback();
+			}
+		})
+		.catch(ex => callback(ex));
 
 	// request
 	// 	.post(endpoint)
@@ -54,54 +61,13 @@ export function findPackages(q, offset, limit, callback) {
 	// 			callback(err);
 	// 		} else if (result.body.results[0] && result.body.results[0].data) {
 	// 			callback(null, {
-	// 				packages: result.body.results[0].data.map(d => {
-	// 					return {
-	// 						id: d.row[0],
-	// 						versions: d.row[1] ? d.row[1].sort((a, b) => b.ts - a.ts) : []
-	// 					};
+	// 				packageId,
+	// 				versions: result.body.results[0].data.map(d => {
+	// 					return { version: d.row[0], ts: d.row[1] };
 	// 				})
 	// 			});
 	// 		} else {
 	// 			callback();
 	// 		}
 	// 	});
-}
-
-export function getVersions(packageId, offset, limit, callback) {
-	packageId = packageId || '';
-	offset = offset || 0;
-	limit = limit || 25;
-
-	const body = {
-		statements: [{
-			statement: `
-			MATCH (n:Package)-[r:RELEASED_AS]->(v:Version) where n.id = {packageId}
-			RETURN v.name, v.ts ORDER BY v.ts DESC skip {offset} LIMIT {limit}`,
-			parameters: { packageId, offset, limit },
-			'resultDataContents': [
-				'row'
-			],
-			'includeStats': false
-		}]
-	};
-
-	request
-		.post(endpoint)
-		.send(body)
-		.set('Authorization', authorization)
-		.set('Content-Type', 'application/json')
-		.end((err, result) => {
-			if (err) {
-				callback(err);
-			} else if (result.body.results[0] && result.body.results[0].data) {
-				callback(null, {
-					packageId,
-					versions: result.body.results[0].data.map(d => {
-						return { version: d.row[0], ts: d.row[1] };
-					})
-				});
-			} else {
-				callback();
-			}
-		});
 }
