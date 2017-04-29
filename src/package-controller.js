@@ -1,10 +1,13 @@
 import express from 'express';
+import { register } from 'swagger-ops';
 
 import services from './services';
+import spec from '../swagger.json';
 
 const app = express();
+register(app, spec, true);
 
-app.get('/', (req, res) => {
+app.op('searchPackages', (req, res) => {
 
 	const { q, offset, limit } = req.gangplank.params;
 
@@ -21,11 +24,11 @@ app.get('/', (req, res) => {
 		});
 });
 
-app.get('/:packageId', (req, res) => {
+app.op('getPackage', (req, res) => {
 	res.status(501).send(req.gangplank);
 });
 
-app.get('/:packageId/versions', (req, res) => {
+app.op('getPackageVersions', (req, res) => {
 	const { packageId, offset, limit } = req.gangplank.params;
 
 	services.searchService.getVersions(
@@ -41,7 +44,7 @@ app.get('/:packageId/versions', (req, res) => {
 		});
 });
 
-app.get('/:packageId/versions/:version', (req, res) => {
+app.op('getPackageVersionDependencies', (req, res) => {
 	services.treeService.getTree(
 		req.gangplank.packageId + '@' + req.gangplank.version, {
 			ts: req.gangplank.ts
@@ -65,7 +68,7 @@ app.get('/:packageId/versions/:version', (req, res) => {
 		});
 });
 
-app.get('/:packageId/versions/:version/diff', (req, res, next) => {
+app.op('getPackageVersionDiff', (req, res, next) => {
 	req.gangplank.rhsversion = req.gangplank.rhsversion || req.gangplank.version;
 	req.gangplank.rhsts = req.gangplank.rhsts;
 
@@ -84,7 +87,7 @@ app.get('/:packageId/versions/:version/diff', (req, res, next) => {
 	);
 });
 
-app.get('/:packageId/versions/:version/history', (req, res, next) => {
+app.op('getPackageVersionHistory', (req, res, next) => {
 	res.status(501).json({ message: 'This route has been turned off while we sort out some performance issues.' });
 	// services.diffService.getDiffs(
 	// 	req.swagger.packageId,
