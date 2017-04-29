@@ -3,7 +3,7 @@ import semver from 'semver';
 import request from 'superagent';
 
 const endpoint = `http://${process.env.NEO4J_HOST}:7474/db/data/transaction/commit`;
-const authorization = `Basic ${process.env.NEO4J_AUTH}`;
+const authorization = `Basic ${Buffer.from(`${process.env.NEO4J_USERNAME}:${process.env.NEO4J_PASSWORD}`).toString('base64')}`; //`Basic ${process.env.NEO4J_AUTH}`;
 
 export function getTree(versionId, options, callback) {
 	options = options || {};
