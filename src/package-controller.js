@@ -45,10 +45,9 @@ app.op('getPackageVersions', (req, res) => {
 });
 
 app.op('getPackageVersionDependencies', (req, res) => {
+	const { packageId, version, ts } = req.gangplank.params;
 	services.treeService.getTree(
-		req.gangplank.packageId + '@' + req.gangplank.version, {
-			ts: req.gangplank.ts
-		}, (err, response) => {
+		packageId + '@' + version, { ts }, (err, response) => {
 
 			let responseObj = {
 				packageId: req.gangplank.packageId,
@@ -69,14 +68,10 @@ app.op('getPackageVersionDependencies', (req, res) => {
 });
 
 app.op('getPackageVersionDiff', (req, res, next) => {
-	req.gangplank.rhsversion = req.gangplank.rhsversion || req.gangplank.version;
-	req.gangplank.rhsts = req.gangplank.rhsts;
+	const { packageId, version, ts, rhsversion, rhsts } = req.gangplank.params;
 
 	services.treeService.getTreeDiff(
-		req.gangplank.packageId + '@' + req.gangplank.version,
-		req.gangplank.ts,
-		req.gangplank.packageId + '@' + req.gangplank.rhsversion,
-		req.gangplank.rhsts,
+		packageId + '@' + version, ts, packageId + '@' + (rhsversion || version), rhsts,
 		(err, result) => {
 			if (err) {
 				next(err);
