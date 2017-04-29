@@ -1,9 +1,9 @@
 import request from 'superagent';
 
 export default class Neo4jClient {
-	constructor(endpoint, authorization) {
-		this.endpoint = endpoint; // `http://${endpoint}:7474/db/data/transaction/commit`;
-		this.authorization = authorization; //`Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+	constructor(neo4jHost, username, password) {
+		this.endpoint = `http://${neo4jHost}:7474/db/data/transaction/commit`;
+		this.authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 	}
 
 	async query(statement, parameters) {

@@ -7,8 +7,8 @@ import spec from '../swagger.json';
 import SearchService from './services/search-service';
 
 import Neo4jClient from './neo4j-client';
-const endpoint = `http://${process.env.NEO4J_HOST}:7474/db/data/transaction/commit`;
-const authorization = ''; //`Basic ${process.env.NEO4J_AUTH}`;
+const endpoint = process.env.NEO4J_HOST;
+const authorization = `Basic ${process.env.NEO4J_AUTH}`;
 
 const app = express();
 register(app, spec, true);
@@ -18,7 +18,8 @@ app.op('searchPackages', async (req, res, next) => {
 		const { q, offset, limit } = req.gangplank.params;
 
 		// TODO: move to DI module
-		const neo4jClient = new Neo4jClient(endpoint, authorization);
+		const { NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD } = process.env;
+		const neo4jClient = new Neo4jClient(NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD);
 		const searchService = new SearchService(neo4jClient);
 
 		const result = await searchService.findPackages(q, offset, limit);
@@ -37,7 +38,8 @@ app.op('getPackageVersions', async (req, res, next) => {
 		const { packageId, offset, limit } = req.gangplank.params;
 
 		// TODO: move to DI module
-		const neo4jClient = new Neo4jClient(endpoint, authorization);
+		const { NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD } = process.env;
+		const neo4jClient = new Neo4jClient(NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD);
 		const searchService = new SearchService(neo4jClient);
 
 		const result = await searchService.getVersions(packageId, offset, limit);
