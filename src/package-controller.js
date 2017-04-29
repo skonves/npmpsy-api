@@ -4,44 +4,52 @@ import { register } from 'swagger-ops';
 import services from './services';
 import spec from '../swagger.json';
 
+import SearchService from './services/search-service';
+
+import Neo4jClient from './neo4j-client';
+const endpoint = `http://${process.env.NEO4J_HOST}:7474/db/data/transaction/commit`;
+const authorization = ''; //`Basic ${process.env.NEO4J_AUTH}`;
+
 const app = express();
 register(app, spec, true);
 
-app.op('searchPackages', (req, res) => {
+app.op('searchPackages', async (req, res, next) => {
+	try {
+		const { q, offset, limit } = req.gangplank.params;
 
-	const { q, offset, limit } = req.gangplank.params;
+		// TODO: move to DI module
+		const neo4jClient = new Neo4jClient(endpoint, authorization);
+		const searchService = new SearchService(neo4jClient);
 
-	services.searchService.findPackages(
-		q, offset, limit,
-		(err, result) => {
-			if (err) {
-				res.status(503).send({ err });
-			} else if (result && result.packages && result.packages.length > 0) {
-				res.send(result);
-			} else {
-				res.send({ message: 'No packages found', packages: [] });
-			}
-		});
+		const result = await searchService.findPackages(q, offset, limit);
+		res.send(result);
+	} catch (ex) {
+		next(ex);
+	}
 });
 
 app.op('getPackage', (req, res) => {
 	res.status(501).send(req.gangplank);
 });
 
-app.op('getPackageVersions', (req, res) => {
-	const { packageId, offset, limit } = req.gangplank.params;
+app.op('getPackageVersions', async (req, res, next) => {
+	try {
+		const { packageId, offset, limit } = req.gangplank.params;
 
-	services.searchService.getVersions(
-		packageId, offset, limit,
-		(err, result) => {
-			if (err) {
-				res.status(503).send({ err });
-			} else if (result && result.versions && result.versions.length > 0) {
-				res.send({ packageId: req.gangplank.packageId, versions: result.versions });
-			} else {
-				res.send({ packageId: req.gangplank.packageId, message: 'No packages found', versions: [] });
-			}
-		});
+		// TODO: move to DI module
+		const neo4jClient = new Neo4jClient(endpoint, authorization);
+		const searchService = new SearchService(neo4jClient);
+
+		const result = await searchService.getVersions(packageId, offset, limit);
+
+		if (result && result.versions && result.versions.length > 0) {
+			res.send({ packageId, versions: result.versions });
+		} else {
+			res.send({ packageId, message: 'No packages found', versions: [] });
+		}
+	} catch (ex) {
+		next(ex);
+	}
 });
 
 app.op('getPackageVersionDependencies', (req, res) => {
