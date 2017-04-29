@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible Node.js debug attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch API",
+            "program": "${workspaceRoot}/.compiled/server.js",
+            "stopOnEntry": false,
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": "rebuild",
+            "runtimeExecutable": null,
+            "runtimeArgs": ["--nolazy"],
+            "env": {
+				"NEO4J_HOST": "npmspy.com",
+				"NEO4J_AUTH": "bmVvNGo6Y29ycmVjdC1ob3JzZS1iYXR0ZXJ5LXN0YXBsZQ==",
+                "NODE_ENV": "development"
+            },
+            "console": "internalConsole",
+            "sourceMaps": true,
+            "outDir": "${workspaceRoot}/.compiled"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to Process",
+            "port": 5858
+        }
+    ]
+}

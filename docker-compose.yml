@@ -1,0 +1,80 @@
+version: "2"
+services:
+  nginx:
+    image: npmspy/nginx:latest
+    depends_on:
+     - api
+     - website
+    ports:
+     - 80:80
+     - 443:443
+    volumes:
+     - /etc/letsencrypt:/etc/letsencrypt
+     - /var/log/nginx:/var/log/nginx
+
+  api:
+    image: npmspy/api:latest
+    depends_on:
+     - neo4j
+    ports:
+     - 3001:3001
+    environment:
+      NEO4J_HOST: neo4j
+      NEO4J_AUTH: bmVvNGo6Y29ycmVjdC1ob3JzZS1iYXR0ZXJ5LXN0YXBsZQ==
+      NODE_ENV: development
+
+  website:
+    image: npmspy/website:latest
+    depends_on:
+     - api
+    ports:
+     - 3000:3000
+    environment:
+      NPMSPY_API_HOST: http://api:3001
+
+  neo4j:
+    image: "npmspy/neo4j:latest"
+    ports:
+     - "7474:7474"
+     - "7687:7687"
+    volumes:
+     - /mnt/volume-sfo2-01-part1/neo4j/data:/data
+     - /mnt/volume-sfo2-01-part1/neo4j/logs:/logs
+    environment:
+      NEO4J_AUTH: 'neo4j/correct-horse-battery-staple'
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbitmq"
+    volumes:
+     - /mnt/volume-sfo2-01-part1/rabbitmq:/var/lib/rabbitmq
+    ports:
+     - "8080:15672"
+     - "5671:5671"
+     - "5672:5672"
+
+  listener:
+    image: "npmspy/change-listener:latest"
+    restart: on-failure
+    depends_on:
+     - rabbitmq
+    volumes:
+     - /mnt/volume-sfo2-01-part1/listener/state:/state
+    environment:
+      NODE_ENV: production
+      REPLICATION_HOST: "https://replicate.npmjs.com"
+      QUEUE_HOST: "rabbitmq"
+      PRIORITY_QUEUE: "priority"
+
+  importer:
+    image: "npmspy/db-importer:latest"
+    restart: on-failure
+    depends_on:
+     - neo4j
+     - rabbitmq
+    environment:
+      REPLICATION_HOST: "https://replicate.npmjs.com"
+      QUEUE_HOST: "rabbitmq"
+      PRIORITY_QUEUE: "priority"
+      NEO4J_HOST: "neo4j"
+      NEO4J_AUTH: "bmVvNGo6Y29ycmVjdC1ob3JzZS1iYXR0ZXJ5LXN0YXBsZQ=="
