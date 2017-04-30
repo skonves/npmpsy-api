@@ -4,7 +4,6 @@ import { register } from 'swagger-ops';
 import services from './services';
 import spec from '../swagger.json';
 
-import SearchService from './services/search-service';
 import TreeService from './services/tree-service';
 import PackageRepository from './package-repository';
 import PackageService from './package-service';
