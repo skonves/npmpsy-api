@@ -6,6 +6,8 @@ import spec from '../swagger.json';
 
 import SearchService from './services/search-service';
 import TreeService from './services/tree-service';
+import PackageRepository from './package-repository';
+import PackageService from './package-service';
 
 import Neo4jClient from './neo4j-client';
 const endpoint = process.env.NEO4J_HOST;
@@ -21,9 +23,10 @@ app.op('searchPackages', async (req, res, next) => {
 		// TODO: move to DI module
 		const { NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD } = process.env;
 		const neo4jClient = new Neo4jClient(NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD);
-		const searchService = new SearchService(neo4jClient);
+		const packageRepository = new PackageRepository(neo4jClient);
+		const packageService = new PackageService(packageRepository);
 
-		const result = await searchService.findPackages(q, offset, limit);
+		const result = await packageService.findPackages(q, offset, limit);
 		res.send(result);
 	} catch (ex) {
 		next(ex);
@@ -41,12 +44,13 @@ app.op('getPackageVersions', async (req, res, next) => {
 		// TODO: move to DI module
 		const { NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD } = process.env;
 		const neo4jClient = new Neo4jClient(NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD);
-		const searchService = new SearchService(neo4jClient);
+		const packageRepository = new PackageRepository(neo4jClient);
+		const packageService = new PackageService(packageRepository);
 
-		const result = await searchService.getVersions(packageId, offset, limit);
+		const result = await packageService.getVersions(packageId, offset, limit);
 
-		if (result && result.versions && result.versions.length > 0) {
-			res.send({ packageId, versions: result.versions });
+		if (result && result.versions && result.versions.length) {
+			res.send(result);
 		} else {
 			res.send({ packageId, message: 'No packages found', versions: [] });
 		}
@@ -62,21 +66,17 @@ app.op('getPackageVersionDependencies', async (req, res, next) => {
 		// TODO: move to DI module
 		const { NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD } = process.env;
 		const neo4jClient = new Neo4jClient(NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD);
-		const treeService = new TreeService(neo4jClient);
+		const packageRepository = new PackageRepository(neo4jClient);
+		const packageService = new PackageService(packageRepository);
 
-		const result = await treeService.getTree(packageId, version, ts);
-
-		let responseObj = {
-			packageId,
-			version
-		};
+		const result = await packageService.getTree(packageId, version, ts);
 
 		// TODO: figure out how to 404 when packageId@version does not exist
 		res.send({
 			packageId,
 			version,
-			ts: result.ts,
-			dependencies: result.tree.dependencies
+			ts,
+			dependencies: result.dependencies
 		});
 
 	} catch (ex) {
