@@ -1,6 +1,8 @@
 import request from 'superagent';
+import Neo4jClient from '../neo4j-client';
 
 export default class SearchService {
+	/** @param {Neo4jClient} neo4jClient */
 	constructor(neo4jClient) {
 		this.client = neo4jClient;
 	}

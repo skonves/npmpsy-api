@@ -6,6 +6,11 @@ export default class Neo4jClient {
 		this.authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 	}
 
+	/**
+	 * @param {string} statement
+	 * @param {object} parameters
+	 * @returns {Promise<[object]>}
+	 */
 	async query(statement, parameters) {
 		const body = {
 			statements: [{
