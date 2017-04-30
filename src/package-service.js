@@ -158,7 +158,9 @@ function getGitDiffUri(packageData, vStart, vEnd) {
 				const repoEnd = partsEnd[2];
 
 				if (userStart === userEnd && repoStart === repoEnd) {
-					const span = semver.gt(vStart, vEnd) ? `${end.gitHead}...${start.gitHead}` : `${start.gitHead}...${end.gitHead}`;
+					const startHead = start.gitHead.substr(0, 7);
+					const endHead = end.gitHead.substr(0, 7);
+					const span = semver.gt(vStart, vEnd) ? `${endHead}...${startHead}` : `${startHead}...${endHead}`;
 					const uri = `https://github.com/${userEnd}/${repoEnd}/compare/${span}`;
 					return uri;
 				}
