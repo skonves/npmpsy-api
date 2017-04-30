@@ -5,6 +5,7 @@ import services from './services';
 import spec from '../swagger.json';
 
 import SearchService from './services/search-service';
+import TreeService from './services/tree-service';
 
 import Neo4jClient from './neo4j-client';
 const endpoint = process.env.NEO4J_HOST;
@@ -54,27 +55,33 @@ app.op('getPackageVersions', async (req, res, next) => {
 	}
 });
 
-app.op('getPackageVersionDependencies', (req, res) => {
-	const { packageId, version, ts } = req.gangplank.params;
-	services.treeService.getTree(
-		packageId + '@' + version, { ts }, (err, response) => {
+app.op('getPackageVersionDependencies', async (req, res, next) => {
+	try {
+		const { packageId, version, ts } = req.gangplank.params;
 
-			let responseObj = {
-				packageId: req.gangplank.packageId,
-				version: req.gangplank.version
-			};
+		// TODO: move to DI module
+		const { NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD } = process.env;
+		const neo4jClient = new Neo4jClient(NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD);
+		const treeService = new TreeService(neo4jClient);
 
-			if (err) {
-				res.status(503).send({ err });
-			} else if (response) {
-				responseObj.ts = response.ts;
-				responseObj.dependencies = response.tree.dependencies;
-				res.send(responseObj);
-			} else {
-				responseObj.message = 'Dependency tree not found';
-				res.send(responseObj);
-			}
+		const result = await treeService.getTree(packageId, version, ts);
+
+		let responseObj = {
+			packageId,
+			version
+		};
+
+		// TODO: figure out how to 404 when packageId@version does not exist
+		res.send({
+			packageId,
+			version,
+			ts: result.ts,
+			dependencies: result.tree.dependencies
 		});
+
+	} catch (ex) {
+		next(ex);
+	}
 });
 
 app.op('getPackageVersionDiff', (req, res, next) => {

@@ -2,8 +2,35 @@ import deepdiff from 'deep-diff';
 import semver from 'semver';
 import request from 'superagent';
 
+import Neo4jClient from '../neo4j-client';
+
 const endpoint = `http://${process.env.NEO4J_HOST}:7474/db/data/transaction/commit`;
 const authorization = `Basic ${Buffer.from(`${process.env.NEO4J_USERNAME}:${process.env.NEO4J_PASSWORD}`).toString('base64')}`; //`Basic ${process.env.NEO4J_AUTH}`;
+
+export default class TreeService {
+	/** @param {Neo4jClient} neo4jClient */
+	constructor(neo4jClient) {
+		this.client = neo4jClient;
+	}
+
+	async getTree(packageId, version, ts) {
+		const versionId = `${packageId}@${version}`;
+		ts = ts || new Date().getTime();
+
+		const statement = `
+			MATCH path=(:Version {id: {versionId}})-[ds:SATISFIED_BY*..100 {type: ""}]->(v:Version)
+			WHERE ALL (d IN ds WHERE d.effective <= {ts} < d.superceded)
+			RETURN tail(nodes(path)) AS tail`;
+
+		const results = await this.client.query(statement, { versionId, ts });
+
+		return {
+			package: versionId,
+			ts,
+			tree: map(versionId, results.map(r => r.tail))
+		};
+	}
+}
 
 export function getTree(versionId, options, callback) {
 	options = options || {};
