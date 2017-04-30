@@ -84,19 +84,34 @@ app.op('getPackageVersionDependencies', async (req, res, next) => {
 	}
 });
 
-app.op('getPackageVersionDiff', (req, res, next) => {
-	const { packageId, version, ts, rhsversion, rhsts } = req.gangplank.params;
+app.op('getPackageVersionDiff', async (req, res, next) => {
+	try {
+		const { packageId, version, ts, rhsversion, rhsts } = req.gangplank.params;
 
-	services.treeService.getTreeDiff(
-		packageId + '@' + version, ts, packageId + '@' + (rhsversion || version), rhsts,
-		(err, result) => {
-			if (err) {
-				next(err);
-			} else {
-				res.json(result);
-			}
-		}
-	);
+		// TODO: move to DI module
+		const { NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD } = process.env;
+		const neo4jClient = new Neo4jClient(NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD);
+		const packageRepository = new PackageRepository(neo4jClient);
+		const packageService = new PackageService(packageRepository);
+
+		const lhs = {
+			packageId,
+			version,
+			ts
+		};
+
+		const rhs = {
+			packageId,
+			version: rhsversion,
+			ts: rhsts
+		};
+
+		const result = await packageService.getTreeDiff(lhs, rhs);
+
+		res.json(result);
+	} catch (ex) {
+		next(ex);
+	}
 });
 
 app.op('getPackageVersionHistory', (req, res, next) => {
