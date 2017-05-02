@@ -4,10 +4,9 @@
   "description": "Web API for npmspy",
   "main": "index.js",
   "scripts": {
-    "build": "babel src --out-dir .compiled --copy-files",
+    "compile": "babel src --out-dir .compiled --copy-files",
     "clean": "rm -rf .compiled && mkdir .compiled",
-    "rebuild": "npm run clean && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "recompile": "npm run clean && npm run compile",
     "docker": "docker build -t npmspy/api ./.compiled"
   },
   "author": "Steve Konves",

@@ -12,7 +12,7 @@
             "stopOnEntry": false,
             "args": [],
             "cwd": "${workspaceRoot}",
-            "preLaunchTask": "rebuild",
+            "preLaunchTask": "recompile",
             "runtimeExecutable": null,
             "runtimeArgs": ["--nolazy"],
             "env": {
