@@ -4,6 +4,8 @@
   "description": "Web API for npmspy",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint ./src",
+    "lintfix": "eslint --fix ./src",
     "compile": "babel src --out-dir .compiled --copy-files",
     "clean": "rm -rf .compiled && mkdir .compiled",
     "recompile": "npm run clean && npm run compile",
