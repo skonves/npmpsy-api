@@ -3,11 +3,16 @@ import deepdiff from 'deep-diff';
 import semver from 'semver';
 
 import PackageRepository from './package-repository';
+import GitHeadRepository from './git-head-repository';
 
 export default class SearchService {
-	/** @param {PackageRepository} packageRepository */
-	constructor(packageRepository) {
+	/**
+	 * @param {PackageRepository} packageRepository
+	 * @param {GitHeadRepository} gitHeadRepository
+	 * */
+	constructor(packageRepository, gitHeadRepository) {
 		this.repo = packageRepository;
+		this.gitHeadRepository = gitHeadRepository;
 	}
 
 	async findPackages(q, offset, limit) {
