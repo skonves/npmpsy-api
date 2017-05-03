@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch API",
-            "program": "${workspaceRoot}/.compiled/server.js",
+            "program": "${workspaceRoot}/.compiled/src/server.js",
             "stopOnEntry": false,
             "args": [],
             "cwd": "${workspaceRoot}",
@@ -23,7 +23,7 @@
             },
             "console": "internalConsole",
             "sourceMaps": true,
-            "outDir": "${workspaceRoot}/.compiled"
+            "outDir": "${workspaceRoot}/.compiled/src"
         },
         {
             "type": "node",
