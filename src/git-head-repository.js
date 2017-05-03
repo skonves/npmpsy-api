@@ -8,28 +8,29 @@ export default class GitHeadRepository {
 	async getGitHeadData(packageVersions) {
 		const result = {};
 
-		for (let packageVersion in packageVersions) {
+		for (let packageVersion of packageVersions) {
 			result[packageVersion.packageId] = result[packageVersion.packageId] || {};
 
 			result[packageVersion.packageId][packageVersion.version] = result[packageVersion.packageId][packageVersion.version] || {};
 		}
 
-		await Object.keys(updatedVersions).map(packageId => {
-			return new Promise((resolve, reject) => {
-				request.get(`https://${this.registryHost}/${packageId}`, (err, res) => {
-					if (err) {
-						reject(err);
-					} else {
-						const versions = Object.keys(result[packageId]);
-
-						for (let version in versions) {
-							result[packageId][version] = getVersionData(res.body, version);
+		await Promise.all(
+			Object.keys(result).map(packageId => {
+				return new Promise((resolve, reject) => {
+					request.get(`https://${this.registryHost}/${packageId}`, (err, res) => {
+						if (err) {
+							reject(err);
+						} else {
+							const versions = Object.keys(result[packageId]);
+							for (let version of versions) {
+								result[packageId][version] = this.getVersionData(res.body, version);
+							}
+							resolve();
 						}
-						resolve();
-					}
+					});
 				});
-			});
-		});
+			})
+		);
 
 		return result;
 	}
