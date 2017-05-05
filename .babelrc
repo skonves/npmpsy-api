@@ -1,11 +1,18 @@
 {
-    "presets": [
-        "es2015", "stage-0"
-    ],
-    "plugins": [
-        "transform-object-rest-spread",
-        "transform-es2015-destructuring",
+	"presets": [
+		"es2015", "stage-0"
+	],
+	"plugins": [
+		"transform-object-rest-spread",
+		"transform-es2015-destructuring",
 		"transform-runtime"
-    ],
-    "sourceMaps": "inline"
+	],
+	"sourceMaps": "inline",
+	"env": {
+		"test": {
+			"plugins": [
+				"istanbul"
+			]
+		}
+	}
 }
