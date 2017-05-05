@@ -5,3 +5,5 @@ install:
   - npm i
 script:
   - npm t
+after_success:
+  - npm run coveralls
